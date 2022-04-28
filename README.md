@@ -13,4 +13,5 @@ by using pytorch, lstm, multi-gpu to translation
                         help='number of total epochs to run')
 
 
-References : https://github.com/bentrevett/pytorch-seq2seq/blob/master/1%20-%20Sequence%20to%20Sequence%20Learning%20with%20Neural%20Networks.ipynb
+## References 
+https://github.com/bentrevett/pytorch-seq2seq
