@@ -14,6 +14,8 @@ import random
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
+from sentence import vocab_make
+
 
 import os
 import argparse
@@ -25,6 +27,8 @@ from apex import amp
 SEED = 1234
 
 random.seed(SEED)
+
+vocab_make()
 
 df = pd.read_excel('conversation.xlsx', engine='openpyxl')
 df = df.loc[:, '원문':'번역문']
@@ -52,9 +56,8 @@ for str in encoder:
     temp = sp_e.encode(str, out_type=int)
     i = len(temp)
     while i < max_encoder:
-        temp.append(1)
+        temp.append(0)
         i += 1
-    temp.reverse()
     encoder_index.append(temp)
 
 decoder_input_index=[]
@@ -63,7 +66,7 @@ for str in decoder:
     temp = sp.encode(str, out_type=int)
     i = len(temp)
     while i < max_decoder:
-        temp.append(1)
+        temp.append(0)
         i += 1
     decoder_input_index.append(temp)
 
@@ -73,10 +76,9 @@ for str in decoder:
     temp = sp.encode(str, out_type=int)
     i = len(temp)
     while i < max_decoder:
-        temp.append(1)
+        temp.append(0)
         i += 1
     decoder_output_index.append(temp)
-
 
 
 class CustomDataset(Dataset):
@@ -195,8 +197,8 @@ def train(gpu, args):
     torch.cuda.set_device(gpu)
     model.cuda(gpu)
 
-    loss_fn = nn.CrossEntropyLoss(ignore_index = 1).cuda(gpu)
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    loss_fn = nn.CrossEntropyLoss(ignore_index = 0).cuda(gpu)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
 #######################################################################################
     # checkpoint= torch.load('amp_checkpoint.pt', map_location=torch.device('cpu'))
@@ -275,7 +277,6 @@ def main():
 def translate(model, sequence = "", sequence2 = ""):
     encoder_index=sp_e.encode(sequence, out_type=int)
 
-    encoder_index.reverse()
     encoder_index = torch.tensor(encoder_index).unsqueeze(0).cuda()
 
     sp.SetEncodeExtraOptions('bos')
@@ -291,7 +292,6 @@ def translate(model, sequence = "", sequence2 = ""):
 def translate_test(model, sequence = "", sequence2 = ""):
     encoder_index=sp_e.encode(sequence, out_type=int)
 
-    encoder_index.reverse()
     encoder_index = torch.tensor(encoder_index).unsqueeze(0).cuda()
 
     sp.SetEncodeExtraOptions('bos')
@@ -306,7 +306,6 @@ def translate_test(model, sequence = "", sequence2 = ""):
 def beam_search(model, sequence = ""):
     encoder_index=sp_e.encode(sequence, out_type=int)
 
-    encoder_index.reverse()
     encoder_index = torch.tensor(encoder_index).unsqueeze(0).cuda()
 
     sequence2 = ""
@@ -345,7 +344,7 @@ def test():
     model = Model(enc, dec, device)
     model.to(device)
 
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
     checkpoint= torch.load('amp_checkpoint.pt')
 
     model, optimizer = amp.initialize(model, optimizer, opt_level='O1')
