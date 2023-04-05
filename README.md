@@ -15,7 +15,3 @@ by using pytorch, lstm, multi-gpu to translation
                         metavar='N',
                         help='number of total epochs to run')
 ```
-
-
-## References 
-https://github.com/bentrevett/pytorch-seq2seq
